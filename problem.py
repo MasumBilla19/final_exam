@@ -3,9 +3,11 @@ import random
 
 class Bank(ABC):
     def __init__(self) -> None:
-        self.transaction=[]
+        self.transactions=[]
         self.accounts={}
         self.employees={}
+        self.total_loan=0
+        self.loan_enabled=True
 
 
     def create_account(self, email, password):
@@ -14,11 +16,11 @@ class Bank(ABC):
                 print("Account Already Exists!")
                 return
             
-        account_number=random.randint(0, 1)
+        account_number=random.randint(0, 5)
         initial_balance=0
 
         while account_number in self.accounts:
-            account_number=random.randint(0, 1)
+            account_number=random.randint(0, 5)
 
         self.accounts[account_number]=(initial_balance, email, password)
         print("Account Created Successfully!")
@@ -29,7 +31,7 @@ class Bank(ABC):
             balance, email, password=self.accounts[account_number]
             balance+=amount
             self.accounts[account_number]=(balance, email, password)
-            self.transaction.append(f"Deposited {amount} to account {account_number}.")
+            self.transactions.append(f"Deposited {amount} to account {account_number}.")
             print("Deposit Successfuly!")
         else:
             print("Account Doesn't Exist!")
@@ -41,7 +43,7 @@ class Bank(ABC):
             if balance>=amount:
                 balance-=amount
                 self.accounts[account_number]=(balance, email, password)
-                self.transaction.append(f"Withdraw {amount} from account {account_number}.")
+                self.transactions.append(f"Withdraw {amount} from account {account_number}.")
                 print("Withdraw Successfully!")
             else:
                 print("Not Enough Balance!")
@@ -66,7 +68,7 @@ class Bank(ABC):
                 balance_t+=amount
                 self.accounts[from_account]=(balance_f, email_f, password_f)
                 self.accounts[to_account]=(balance_t, email_t, password_t)
-                self.transaction.append(f"Transferred {amount} from account {from_account} to account {to_account}.")
+                self.transactions.append(f"Transferred {amount} from account {from_account} to account {to_account}.")
                 print("Transfer Successfully!")
             else:
                 print("Not Enough Balance!")
@@ -75,17 +77,21 @@ class Bank(ABC):
 
 
     def check_transaction_history(self):
-        for transaction in self.transaction:
+        for transaction in self.transactions:
             print(transaction, end="\n")
 
 
     def take_loan(self, account_number):
         if account_number in self.accounts:
             balance, email, password=self.accounts[account_number]
-            loan_amount=balance*2
-            self.accounts[account_number]=(loan_amount, email, password)
-            self.transaction.append(f"Took a Loan of {loan_amount} from account {account_number}.")
-            print("Loan Taken Successfully!")
+            if self.loan_enabled:
+                total_loan=balance*2
+                self.total_loan+=total_loan
+                self.accounts[account_number]=(balance+total_loan, email, password)
+                self.transactions.append(f"Took a Loan of {total_loan} from account {account_number}.")
+                print("Loan Taken Successfully!")
+            else:
+                print("The Bank has disabled the load featre")
         else:
             print("Account Doesn't Exist!")
 
@@ -93,9 +99,13 @@ class Bank(ABC):
     def total_available_balance(self):
         total=0
         for account in self.accounts.values():
-            balance, email, password=self.accounts[account]
+            balance, email, password=account
             total+=balance
-        print(total)
+        return total
+    
+    def total_loan(self):
+        return self.total_loan
+    
 
 
 class User(Bank):
@@ -144,6 +154,9 @@ class Admin(Bank):
 
     def get_total_available_balance(self):
         return super().total_available_balance()
+    
+    def get_total_loan(self):
+        return super().total_loan()
 
 
 
@@ -168,9 +181,9 @@ user2.check_transaction_history()
 
 admin1=Admin("billa@gmail.com", "1234")
 admin1.create_empolyee_account("employee1@gmail.com", "password1")
-admin1.get_total_available_balance()
-
-
+total_balance=admin1.get_total_available_balance()
+print("Total Available Balance: ", total_balance)
+print(admin1.get_total_loan())
 
 
 
